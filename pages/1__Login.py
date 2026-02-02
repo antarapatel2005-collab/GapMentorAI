@@ -1,4 +1,4 @@
-# pages/1__Login.py - Login page with HIDDEN SIDEBAR
+# pages/1__Login.py - Login page with IMPROVED COLORS & THEME SUPPORT
 
 import streamlit as st
 from utils.database import init_db
@@ -9,13 +9,13 @@ st.set_page_config(
     page_title="Login - AI Study Buddy",
     page_icon="🔐",
     layout="centered",
-    initial_sidebar_state="collapsed"  # ← SIDEBAR COLLAPSED BY DEFAULT
+    initial_sidebar_state="collapsed"
 )
 
 # Initialize database
 init_db()
 
-# Custom CSS - HIDE SIDEBAR COMPLETELY ON LOGIN PAGE
+# Custom CSS - IMPROVED CONTRAST & BROWSER THEME AWARE
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -29,16 +29,15 @@ st.markdown("""
         display: none !important;
     }
     
-    /* HIDE SIDEBAR TOGGLE BUTTON */
     button[kind="header"] {
         display: none !important;
     }
     
-    /* HIDE TOP BAR */
     header[data-testid="stHeader"] {
         display: none !important;
     }
     
+    /* Light mode (default) */
     .main {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 0;
@@ -54,7 +53,7 @@ st.markdown("""
         background: white;
         padding: 3rem 2.5rem;
         border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     }
     
     h1 {
@@ -67,46 +66,110 @@ st.markdown("""
     
     .subtitle {
         text-align: center;
-        color: #666;
+        color: #555;
         font-size: 1rem;
         margin-bottom: 2rem;
+        font-weight: 500;
     }
     
     .stTextInput > div > div > input {
-        border: 2px solid #e0e0e0;
+        border: 2px solid #d0d0d0;
         border-radius: 10px;
         padding: 0.9rem;
         font-size: 1rem;
         transition: all 0.3s;
+        background-color: #fafafa;
+        color: #1a1a1a !important;
     }
     
     .stTextInput > div > div > input:focus {
         border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        background-color: white;
     }
     
     .stTextInput > label {
         font-weight: 600;
-        color: #333;
+        color: #2a2a2a !important;
         font-size: 0.95rem;
     }
     
+    .stCheckbox label {
+        color: #2a2a2a !important;
+        font-weight: 500;
+    }
+    
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
         border-radius: 10px;
         padding: 0.9rem;
         font-size: 1.1rem;
         font-weight: 600;
         width: 100%;
         margin-top: 1.5rem;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5) !important;
+    }
+    
+    .stMarkdown p {
+        color: #2a2a2a;
+    }
+    
+    .stMarkdown strong {
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+    
+    hr {
+        border-color: #e0e0e0;
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .main {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .login-card {
+            background: #1e1e1e !important;
+            border: 1px solid #333 !important;
+        }
+        
+        h1 {
+            color: #00d9ff !important;
+        }
+        
+        .subtitle {
+            color: #b0b0b0 !important;
+        }
+        
+        .stTextInput > label {
+            color: #e0e0e0 !important;
+        }
+        
+        .stTextInput > div > div > input {
+            background-color: #2a2a2a !important;
+            color: #ffffff !important;
+            border-color: #444 !important;
+        }
+        
+        .stCheckbox label {
+            color: #e0e0e0 !important;
+        }
+        
+        .stMarkdown p, .stMarkdown strong {
+            color: #e0e0e0 !important;
+        }
+        
+        hr {
+            border-color: #444 !important;
+        }
     }
     
     #MainMenu {visibility: hidden;}
