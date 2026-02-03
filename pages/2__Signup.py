@@ -1,4 +1,4 @@
-# pages/2__Signup.py - FIXED VERSION
+# pages/2__Signup.py - FIXED (No Empty Box)
 
 import streamlit as st
 from utils.database import init_db, create_user
@@ -13,7 +13,7 @@ st.set_page_config(
 
 init_db()
 
-# THEME CSS
+# THEME CSS + Hide empty container
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -24,6 +24,20 @@ st.markdown("""
     [data-testid="stSidebar"],
     button[kind="header"],
     header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    /* HIDE EMPTY CONTAINER/WARNING BOX */
+    [data-testid="stAlert"]:empty,
+    [data-testid="stNotification"]:empty,
+    .element-container:empty,
+    [data-testid="stMarkdownContainer"]:empty {
+        display: none !important;
+    }
+    
+    /* Hide any empty divs at the top */
+    .main > div:first-child:empty,
+    .block-container > div:first-child:empty {
         display: none !important;
     }
     
@@ -96,14 +110,21 @@ st.markdown("""
     }
     
     .block-container {
-        padding: 2rem 1rem;
+        padding: 2rem 1rem !important;
         max-width: 550px;
+    }
+    
+    /* Remove any top padding/margin that creates empty space */
+    .block-container > div:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
     
     .signup-card {
         padding: 2.5rem;
         border-radius: 20px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        margin-top: 0 !important;
     }
     
     h1 {
@@ -160,6 +181,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Start card container immediately (no empty space before)
 st.markdown('<div class="signup-card">', unsafe_allow_html=True)
 
 st.markdown("# Create Account")
@@ -169,22 +191,22 @@ with st.form("signup_form"):
     col1, col2 = st.columns(2)
     
     with col1:
-        full_name = st.text_input("Full Name*", placeholder="John Doe")
+        full_name = st.text_input("Full Name*", placeholder="John Doe", key="signup_fullname")
     
     with col2:
-        username = st.text_input("Username*", placeholder="johndoe")
+        username = st.text_input("Username*", placeholder="johndoe", key="signup_username")
     
-    email = st.text_input("Email Address*", placeholder="john@example.com")
+    email = st.text_input("Email Address*", placeholder="john@example.com", key="signup_email")
     
     col3, col4 = st.columns(2)
     
     with col3:
-        password = st.text_input("Password*", type="password", placeholder="Min 6 characters")
+        password = st.text_input("Password*", type="password", placeholder="Min 6 characters", key="signup_password")
     
     with col4:
-        confirm_password = st.text_input("Confirm Password*", type="password", placeholder="Re-enter password")
+        confirm_password = st.text_input("Confirm Password*", type="password", placeholder="Re-enter password", key="signup_confirm")
     
-    agree_terms = st.checkbox("I agree to the Terms of Service")
+    agree_terms = st.checkbox("I agree to the Terms of Service", key="signup_terms")
     
     submit = st.form_submit_button("Create Account")
     
@@ -213,10 +235,8 @@ with st.form("signup_form"):
         else:
             with st.spinner("🔄 Creating your account..."):
                 try:
-                    # Call create_user - it returns (success, user_id, message)
                     result = create_user(username, email, password, full_name)
                     
-                    # Check if we got 3 values back
                     if isinstance(result, tuple) and len(result) == 3:
                         success, user_id, message = result
                     else:
@@ -235,13 +255,12 @@ with st.form("signup_form"):
                         
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
-                    st.error("Please check if all fields are filled correctly and try again.")
 
 st.markdown("---")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    if st.button("Already have an account? Login", use_container_width=True):
+    if st.button("Already have an account? Login", use_container_width=True, key="goto_login"):
         st.switch_page("pages/1__Login.py")
 
 st.markdown('</div>', unsafe_allow_html=True)
