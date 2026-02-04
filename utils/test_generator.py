@@ -19,7 +19,7 @@ def generate_test_questions(topic, difficulty, num_questions=15):
     
     model = configure_gemini()
     
-    prompt = f"""Generate {num_questions} questions for a test on "{topic}" with {difficulty} difficulty level.
+    prompt = f"""Generate {num_questions} questions for a test on "{topic}" with {difficulty} difficulty level and don't repeat the same question if possible.
 
 Mix of question types:
 - 60% MCQ (Multiple Choice Questions with 4 options)
@@ -132,4 +132,5 @@ If score >= 60, set is_correct to true."""
         matches = sum(1 for word in keywords if word in user_words)
         score = (matches / len(keywords)) * 100 if keywords else 0
         
+
         return score >= 60, score
