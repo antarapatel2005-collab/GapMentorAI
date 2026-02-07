@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 st.set_page_config(
     page_title="Study Plan - GapMentorAI",
     page_icon="📅",
-    layout="wide"
+    layout="centered"
 )
 
 # Require authentication
