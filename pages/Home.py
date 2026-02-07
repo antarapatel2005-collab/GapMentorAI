@@ -9,7 +9,7 @@ from datetime import datetime
 st.set_page_config(
     page_title="Home - GapMentorAI",
     page_icon="🏠",
-    layout="wide"
+    layout="centered"
 )
 
 # Require authentication
@@ -297,3 +297,4 @@ with col_right:
 
 st.markdown("---")
 st.caption("🎓 GapMentorAI - Your Personal AI Learning Companion")
+
