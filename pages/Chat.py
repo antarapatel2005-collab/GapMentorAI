@@ -10,7 +10,7 @@ import google.generativeai as genai
 st.set_page_config(
     page_title="Chat - GapMentorAI",
     page_icon="💬",
-    layout="wide"
+    layout="centered"
 )
 
 # Require authentication
