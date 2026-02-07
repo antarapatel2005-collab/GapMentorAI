@@ -1,55 +1,63 @@
-# utils/database.py - Complete Database Setup
+# utils/database.py - Database management for GapMentorAI
 
 import sqlite3
-import hashlib
+import os
 from datetime import datetime
-import json
+from typing import Optional, List, Dict, Tuple
 
-DB_NAME = 'study_buddy.db'
+DATABASE_PATH = "gapMentorAI.db"
 
 def get_connection():
-    """Create database connection"""
-    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
+    """Get database connection"""
+    conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    """Initialize all database tables"""
+    """Initialize database with all required tables"""
     conn = get_connection()
     cursor = conn.cursor()
     
     # Users table
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
             full_name TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            profile_pic TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP,
+            study_streak INTEGER DEFAULT 0,
+            preferred_study_time TEXT,
+            email_notifications INTEGER DEFAULT 1,
+            study_reminders INTEGER DEFAULT 1
         )
-    ''')
+    """)
     
     # Tests table
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS tests (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             topic TEXT NOT NULL,
+            topic_normalized TEXT NOT NULL,
             difficulty TEXT NOT NULL,
-            total_questions INTEGER DEFAULT 15,
+            total_questions INTEGER NOT NULL,
+            include_descriptive INTEGER DEFAULT 0,
             score REAL,
-            time_taken INTEGER,
-            time_limit INTEGER DEFAULT 900,
-            completed BOOLEAN DEFAULT 0,
+            completed INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            completed_at TIMESTAMP,
+            time_taken INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
-    ''')
+    """)
     
-    # Test questions table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_questions (
+    # Questions table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             test_id INTEGER NOT NULL,
             question_number INTEGER NOT NULL,
@@ -58,372 +66,355 @@ def init_db():
             options TEXT,
             correct_answer TEXT NOT NULL,
             user_answer TEXT,
-            is_correct BOOLEAN,
-            FOREIGN KEY (test_id) REFERENCES tests (id)
+            is_correct INTEGER,
+            time_spent INTEGER,
+            FOREIGN KEY (test_id) REFERENCES tests(id)
         )
-    ''')
+    """)
     
     # Learning gaps table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS learning_gaps (
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gaps (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             topic TEXT NOT NULL,
-            identified_from_test_id INTEGER,
-            gap_description TEXT,
+            topic_normalized TEXT NOT NULL,
+            subtopic TEXT,
+            priority TEXT,
             identified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (identified_from_test_id) REFERENCES tests (id)
+            resolved INTEGER DEFAULT 0,
+            resolved_at TIMESTAMP,
+            test_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (test_id) REFERENCES tests(id)
         )
-    ''')
+    """)
     
-    # Chat history table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS chat_history (
+    # Study plans table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS study_plans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            message TEXT NOT NULL,
-            role TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            plan_name TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            target_date DATE,
+            status TEXT DEFAULT 'active',
+            progress INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
-    ''')
+    """)
+    
+    # Plan tasks table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS plan_tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plan_id INTEGER NOT NULL,
+            task_name TEXT NOT NULL,
+            description TEXT,
+            topic TEXT,
+            priority TEXT,
+            estimated_time INTEGER,
+            status TEXT DEFAULT 'not_started',
+            due_date DATE,
+            completed INTEGER DEFAULT 0,
+            completed_at TIMESTAMP,
+            resources TEXT,
+            FOREIGN KEY (plan_id) REFERENCES study_plans(id)
+        )
+    """)
+    
+    # Chat sessions table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            topic TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    
+    # Chat messages table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_id) REFERENCES chat_sessions(id)
+        )
+    """)
+    
+    # Notifications table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            action_url TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    
+    # Achievements table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_type TEXT NOT NULL,
+            achievement_name TEXT NOT NULL,
+            description TEXT,
+            earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
     
     conn.commit()
     conn.close()
-    print("✅ Database initialized successfully!")
 
-def hash_password(password):
-    """Hash password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-# ==================== USER OPERATIONS ====================
-
-def create_user(username, email, password, full_name=None):
-    """Register new user"""
+def create_user(username: str, email: str, password_hash: str, full_name: str = None) -> Tuple[bool, str]:
+    """Create a new user"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
         
-        hashed_password = hash_password(password)
-        
-        cursor.execute('''
-            INSERT INTO users (username, email, password, full_name)
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash, full_name)
             VALUES (?, ?, ?, ?)
-        ''', (username, email, hashed_password, full_name))
+        """, (username, email, password_hash, full_name))
         
-        user_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        
-        return True, user_id, "Registration successful!"
-    
+        return True, "User created successfully"
     except sqlite3.IntegrityError as e:
-        if 'username' in str(e):
-            return False, None, "Username already exists!"
-        elif 'email' in str(e):
-            return False, None, "Email already exists!"
-        return False, None, "Registration failed!"
-    except Exception as e:
-        return False, None, f"Error: {str(e)}"
-
-def authenticate_user(username, password):
-    """Login user"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        hashed_password = hash_password(password)
-        
-        cursor.execute('''
-            SELECT id, username, email, full_name, created_at
-            FROM users 
-            WHERE username = ? AND password = ?
-        ''', (username, hashed_password))
-        
-        user = cursor.fetchone()
-        conn.close()
-        
-        if user:
-            return True, dict(user)
-        else:
-            return False, "Invalid username or password!"
-    
+        if "username" in str(e):
+            return False, "Username already exists"
+        elif "email" in str(e):
+            return False, "Email already exists"
+        return False, "User creation failed"
     except Exception as e:
         return False, f"Error: {str(e)}"
 
-def get_user_by_id(user_id):
-    """Get user information"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-        user = cursor.fetchone()
-        conn.close()
-        
-        return dict(user) if user else None
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
+def get_user_by_username(username: str) -> Optional[Dict]:
+    """Get user by username"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        return dict(user)
+    return None
 
-# ==================== TEST OPERATIONS ====================
+def get_user_by_email(email: str) -> Optional[Dict]:
+    """Get user by email"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        return dict(user)
+    return None
 
-def create_test(user_id, topic, difficulty, time_limit=900):
-    """Create new test"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO tests (user_id, topic, difficulty, time_limit)
-            VALUES (?, ?, ?, ?)
-        ''', (user_id, topic, difficulty, time_limit))
-        
-        test_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return True, test_id
-    except Exception as e:
-        print(f"Error creating test: {e}")
-        return False, None
+def get_user_by_id(user_id: int) -> Optional[Dict]:
+    """Get user by ID"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        return dict(user)
+    return None
 
-def save_test_question(test_id, question_number, question_text, question_type, 
-                       correct_answer, options=None):
-    """Save test question"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        options_json = json.dumps(options) if options else None
-        
-        cursor.execute('''
-            INSERT INTO test_questions 
-            (test_id, question_number, question_text, question_type, 
-             options, correct_answer)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (test_id, question_number, question_text, question_type, 
-              options_json, correct_answer))
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"Error saving question: {e}")
-        return False
+def update_last_login(user_id: int):
+    """Update user's last login time"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE users 
+        SET last_login = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    """, (user_id,))
+    
+    conn.commit()
+    conn.close()
 
-def get_test_questions(test_id):
-    """Get all questions for a test"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT * FROM test_questions 
-            WHERE test_id = ?
-            ORDER BY question_number
-        ''', (test_id,))
-        
-        questions = cursor.fetchall()
-        conn.close()
-        
-        result = []
-        for q in questions:
-            q_dict = dict(q)
-            if q_dict['options']:
-                q_dict['options'] = json.loads(q_dict['options'])
-            result.append(q_dict)
-        
-        return result
-    except Exception as e:
-        print(f"Error fetching questions: {e}")
-        return []
+def create_test(user_id: int, topic: str, difficulty: str, total_questions: int, include_descriptive: bool = False) -> int:
+    """Create a new test record"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    topic_normalized = topic.lower().strip()
+    
+    cursor.execute("""
+        INSERT INTO tests (user_id, topic, topic_normalized, difficulty, total_questions, include_descriptive)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (user_id, topic, topic_normalized, difficulty, total_questions, int(include_descriptive)))
+    
+    test_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return test_id
 
-def save_user_answer(question_id, user_answer, is_correct):
+def save_question(test_id: int, question_number: int, question_text: str, question_type: str, 
+                  options: str, correct_answer: str):
+    """Save a question to the database"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO questions (test_id, question_number, question_text, question_type, options, correct_answer)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (test_id, question_number, question_text, question_type, options, correct_answer))
+    
+    conn.commit()
+    conn.close()
+
+def save_user_answer(test_id: int, question_number: int, user_answer: str, is_correct: bool):
     """Save user's answer to a question"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE test_questions 
-            SET user_answer = ?, is_correct = ?
-            WHERE id = ?
-        ''', (user_answer, is_correct, question_id))
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"Error saving answer: {e}")
-        return False
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE questions 
+        SET user_answer = ?, is_correct = ?
+        WHERE test_id = ? AND question_number = ?
+    """, (user_answer, int(is_correct), test_id, question_number))
+    
+    conn.commit()
+    conn.close()
 
-def complete_test(test_id, score, time_taken):
+def complete_test(test_id: int, score: float):
     """Mark test as completed and save score"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tests 
-            SET completed = 1, score = ?, time_taken = ?
-            WHERE id = ?
-        ''', (score, time_taken, test_id))
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"Error completing test: {e}")
-        return False
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE tests 
+        SET completed = 1, score = ?, completed_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    """, (score, test_id))
+    
+    conn.commit()
+    conn.close()
 
-def get_user_tests(user_id, limit=None):
-    """Get all tests for a user"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        query = '''
-            SELECT * FROM tests 
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-        '''
-        
-        if limit:
-            query += f' LIMIT {limit}'
-        
-        cursor.execute(query, (user_id,))
-        tests = cursor.fetchall()
-        conn.close()
-        
-        return [dict(test) for test in tests]
-    except Exception as e:
-        print(f"Error fetching tests: {e}")
-        return []
+def get_user_tests(user_id: int, limit: int = None) -> List[Dict]:
+    """Get user's test history"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = """
+        SELECT * FROM tests 
+        WHERE user_id = ? 
+        ORDER BY created_at DESC
+    """
+    
+    if limit:
+        query += f" LIMIT {limit}"
+    
+    cursor.execute(query, (user_id,))
+    tests = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return tests
 
-def get_test_details(test_id):
-    """Get complete test details with questions"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        # Get test info
-        cursor.execute('SELECT * FROM tests WHERE id = ?', (test_id,))
-        test = cursor.fetchone()
-        
-        if not test:
-            return None
-        
-        test_dict = dict(test)
-        
-        # Get questions
-        test_dict['questions'] = get_test_questions(test_id)
-        
-        conn.close()
-        return test_dict
-    except Exception as e:
-        print(f"Error fetching test details: {e}")
-        return None
-
-# ==================== PROGRESS & ANALYTICS ====================
-
-def get_user_stats(user_id):
+def get_user_stats(user_id: int) -> Dict:
     """Get user statistics"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        # Total tests
-        cursor.execute('SELECT COUNT(*) FROM tests WHERE user_id = ? AND completed = 1', (user_id,))
-        total_tests = cursor.fetchone()[0]
-        
-        # Average score
-        cursor.execute('SELECT AVG(score) FROM tests WHERE user_id = ? AND completed = 1', (user_id,))
-        avg_score = cursor.fetchone()[0] or 0
-        
-        # Total learning gaps
-        cursor.execute('SELECT COUNT(*) FROM learning_gaps WHERE user_id = ?', (user_id,))
-        total_gaps = cursor.fetchone()[0]
-        
-        # Topics covered
-        cursor.execute('SELECT COUNT(DISTINCT topic) FROM tests WHERE user_id = ?', (user_id,))
-        topics_covered = cursor.fetchone()[0]
-        
-        conn.close()
-        
-        return {
-            'total_tests': total_tests,
-            'average_score': round(avg_score, 2),
-            'total_gaps': total_gaps,
-            'topics_covered': topics_covered
-        }
-    except Exception as e:
-        print(f"Error fetching stats: {e}")
-        return {
-            'total_tests': 0,
-            'average_score': 0,
-            'total_gaps': 0,
-            'topics_covered': 0
-        }
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Total tests
+    cursor.execute("SELECT COUNT(*) as count FROM tests WHERE user_id = ? AND completed = 1", (user_id,))
+    total_tests = cursor.fetchone()['count']
+    
+    # Average score
+    cursor.execute("SELECT AVG(score) as avg_score FROM tests WHERE user_id = ? AND completed = 1", (user_id,))
+    avg_score = cursor.fetchone()['avg_score'] or 0
+    
+    # Topics covered
+    cursor.execute("SELECT COUNT(DISTINCT topic_normalized) as count FROM tests WHERE user_id = ? AND completed = 1", (user_id,))
+    topics_covered = cursor.fetchone()['count']
+    
+    # Total gaps
+    cursor.execute("SELECT COUNT(*) as count FROM gaps WHERE user_id = ? AND resolved = 0", (user_id,))
+    total_gaps = cursor.fetchone()['count']
+    
+    conn.close()
+    
+    return {
+        'total_tests': total_tests,
+        'average_score': round(avg_score, 1),
+        'topics_covered': topics_covered,
+        'total_gaps': total_gaps
+    }
 
-def get_topic_wise_performance(user_id):
-    """Get performance by topic"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT topic, AVG(score) as avg_score, COUNT(*) as test_count
-            FROM tests 
-            WHERE user_id = ? AND completed = 1
-            GROUP BY topic
-            ORDER BY avg_score DESC
-        ''', (user_id,))
-        
-        performance = cursor.fetchall()
-        conn.close()
-        
-        return [dict(p) for p in performance]
-    except Exception as e:
-        print(f"Error fetching topic performance: {e}")
-        return []
+def create_notification(user_id: int, notif_type: str, title: str, content: str, action_url: str = None):
+    """Create a new notification"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO notifications (user_id, type, title, content, action_url)
+        VALUES (?, ?, ?, ?, ?)
+    """, (user_id, notif_type, title, content, action_url))
+    
+    conn.commit()
+    conn.close()
 
-def save_learning_gap(user_id, topic, test_id, gap_description):
-    """Save identified learning gap"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO learning_gaps 
-            (user_id, topic, identified_from_test_id, gap_description)
-            VALUES (?, ?, ?, ?)
-        ''', (user_id, topic, test_id, gap_description))
-        
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"Error saving gap: {e}")
-        return False
+def get_user_notifications(user_id: int, unread_only: bool = False) -> List[Dict]:
+    """Get user notifications"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM notifications WHERE user_id = ?"
+    params = [user_id]
+    
+    if unread_only:
+        query += " AND read = 0"
+    
+    query += " ORDER BY created_at DESC"
+    
+    cursor.execute(query, params)
+    notifications = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return notifications
 
-def get_learning_gaps(user_id):
-    """Get all learning gaps for user"""
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT * FROM learning_gaps 
-            WHERE user_id = ?
-            ORDER BY identified_at DESC
-        ''', (user_id,))
-        
-        gaps = cursor.fetchall()
-        conn.close()
-        
-        return [dict(gap) for gap in gaps]
-    except Exception as e:
-        print(f"Error fetching gaps: {e}")
-        return []
+def mark_notification_read(notification_id: int):
+    """Mark notification as read"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("UPDATE notifications SET read = 1 WHERE id = ?", (notification_id,))
+    
+    conn.commit()
+    conn.close()
+
+def get_unread_notification_count(user_id: int) -> int:
+    """Get count of unread notifications"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read = 0", (user_id,))
+    count = cursor.fetchone()['count']
+    conn.close()
+    
+    return count
