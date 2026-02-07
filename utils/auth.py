@@ -1,52 +1,80 @@
-# utils/auth.py - WORKING Authentication (FINAL VERSION)
+# utils/auth.py - Authentication logic
 
 import streamlit as st
-from utils.database import authenticate_user, get_user_by_id
+import bcrypt
+from typing import Tuple
+from utils.database import create_user, get_user_by_username, get_user_by_email, update_last_login
 
-def init_session_state():
-    """Initialize session state if not already done"""
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-    if 'user' not in st.session_state:
-        st.session_state.user = None
-    if 'user_id' not in st.session_state:
-        st.session_state.user_id = None
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
-def check_authentication():
-    """Check if user is logged in"""
-    init_session_state()
-    return st.session_state.logged_in
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against its hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-def login_user(username, password):
-    """Login user and set session"""
-    init_session_state()
+def register_user(username: str, email: str, password: str, full_name: str = None) -> Tuple[bool, str]:
+    """Register a new user"""
+    # Hash the password
+    password_hash = hash_password(password)
     
-    success, result = authenticate_user(username, password)
+    # Create user in database
+    success, message = create_user(username, email, password_hash, full_name)
     
-    if success:
-        st.session_state.logged_in = True
-        st.session_state.user = result
-        st.session_state.user_id = result['id']
-        return True, "Login successful!"
-    else:
-        return False, result
+    return success, message
+
+def login_user(username_or_email: str, password: str) -> Tuple[bool, str]:
+    """Login a user"""
+    # Try to get user by username first
+    user = get_user_by_username(username_or_email)
+    
+    # If not found, try email
+    if not user:
+        user = get_user_by_email(username_or_email)
+    
+    # If still not found, return error
+    if not user:
+        return False, "User not found"
+    
+    # Verify password
+    if not verify_password(password, user['password_hash']):
+        return False, "Incorrect password"
+    
+    # Set session state
+    st.session_state.logged_in = True
+    st.session_state.user_id = user['id']
+    st.session_state.username = user['username']
+    st.session_state.email = user['email']
+    st.session_state.full_name = user['full_name']
+    
+    # Update last login
+    update_last_login(user['id'])
+    
+    return True, "Login successful"
 
 def logout_user():
-    """Logout user and clear session"""
+    """Logout the current user"""
     st.session_state.logged_in = False
-    st.session_state.user = None
     st.session_state.user_id = None
-
-def get_current_user():
-    """Get current logged in user"""
-    init_session_state()
-    return st.session_state.user
+    st.session_state.username = None
+    st.session_state.email = None
+    st.session_state.full_name = None
+    st.session_state.test_in_progress = False
+    st.session_state.current_test_id = None
+    st.session_state.chat_session_id = None
 
 def require_authentication():
-    """Require authentication for pages"""
-    init_session_state()
-    
+    """Require user to be logged in"""
     if not st.session_state.logged_in:
-        st.warning("⚠️ Please login to access this page!")
-        st.switch_page("pages/1__Login.py")
-        st.stop()
+        st.switch_page("pages/Login_Signup.py")
+
+def get_current_user():
+    """Get current logged-in user info"""
+    return {
+        'id': st.session_state.user_id,
+        'username': st.session_state.username,
+        'email': st.session_state.email,
+        'full_name': st.session_state.full_name
+    }
