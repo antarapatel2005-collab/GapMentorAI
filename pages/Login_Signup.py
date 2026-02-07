@@ -102,7 +102,7 @@ st.markdown("""
 
 
 # Check if already logged in
-if st.session_state.logged_in:
+if 'logged_in' in st.session_state and st.session_state.logged_in:
     st.switch_page("pages/Home.py")
 
 # Initialize auth mode in session state
@@ -229,4 +229,5 @@ else:
         st.session_state.auth_mode = 'login'
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
