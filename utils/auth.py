@@ -1,17 +1,19 @@
-# utils/auth.py - Authentication logic (WITHOUT bcrypt)
+# utils/auth.py - Authentication logic
 
 import streamlit as st
-import hashlib
+import bcrypt
 from typing import Tuple
 from utils.database import create_user, get_user_by_username, get_user_by_email, update_last_login
 
 def hash_password(password: str) -> str:
-    """Hash a password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash a password using bcrypt"""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
     """Verify a password against its hash"""
-    return hash_password(password) == hashed
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 def register_user(username: str, email: str, password: str, full_name: str = None) -> Tuple[bool, str]:
     """Register a new user"""
