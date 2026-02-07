@@ -1,9 +1,19 @@
 # pages/User_Profile.py - User profile and settings
 
 import streamlit as st
-from utils.auth import require_authentication, get_current_user, logout_user, hash_password, verify_password
+
 from utils.database import get_connection, get_user_by_id
 import re
+from utils.auth import require_authentication, get_current_user, logout_user
+import hashlib
+
+def hash_password(password: str) -> str:
+    """Hash a password using SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against its hash"""
+    return hash_password(password) == hashed
 
 # Page config
 st.set_page_config(
