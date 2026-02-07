@@ -12,7 +12,7 @@ from datetime import datetime
 st.set_page_config(
     page_title="Test - GapMentorAI",
     page_icon="📋",
-    layout="wide"
+    layout="centered"
 )
 
 # Require authentication
@@ -570,3 +570,4 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
