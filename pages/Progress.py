@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 st.set_page_config(
     page_title="Progress - GapMentorAI",
     page_icon="📊",
-    layout="wide"
+    layout="centered"
 )
 
 # Require authentication
@@ -520,3 +520,4 @@ with tab4:
         st.markdown("- **Getting Started**: Complete 5 tests")
         st.markdown("- **Dedicated Learner**: Complete 20 tests")
         st.markdown("- **Topic Master**: Score 90%+ on 3 tests in same topic")
+
