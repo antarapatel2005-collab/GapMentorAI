@@ -7,6 +7,9 @@ from utils.test_generator import generate_test_questions, evaluate_descriptive_a
 from utils.chat_analyser import analyze_test_for_gaps
 import json
 from datetime import datetime
+from utils.auth import require_login
+
+require_login()
 
 # Page config
 st.set_page_config(
@@ -621,6 +624,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
