@@ -82,6 +82,36 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Sidebar
+with st.sidebar:
+    st.markdown("---")
+    st.markdown(f"""
+        <div style="text-align: center; padding: 1rem;">
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
+                        width: 70px; height: 70px; border-radius: 50%; 
+                        margin: 0 auto 0.5rem; display: flex; align-items: center; 
+                        justify-content: center; font-size: 2rem; color: white; font-weight: bold;">
+                {user['username'][0].upper()}
+            </div>
+            <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
+            <p style="color: #888; font-size: 0.9rem;">Student</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Notification badge
+    unread_count = get_unread_notification_count(user['id'])
+    if unread_count > 0:
+        st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
+    
+    st.markdown("---")
+    
+    if st.button("🚪 Logout", use_container_width=True):
+        logout_user()
+        st.rerun()
+
+
 # CRITICAL FIX: Initialize chat session properly
 def ensure_chat_session():
     """Ensure a valid chat session exists"""
