@@ -236,9 +236,11 @@ st.markdown("""
 
 # Sidebar
 with st.sidebar:
+    st.markdown("---")
     
-    st.markdown(f"""
-        <div style="text-align: center; padding: 1rem;">
+    # Make the entire profile section a clickable button
+    profile_html = f"""
+        <div style="text-align: center; padding: 1rem; cursor: pointer;">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
                         width: 70px; height: 70px; border-radius: 50%; 
                         margin: 0 auto 0.5rem; display: flex; align-items: center; 
@@ -248,7 +250,15 @@ with st.sidebar:
             <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
             <p style="color: #888; font-size: 0.9rem;">Student</p>
         </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    # Create a button that looks like the profile card
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("👤 View Profile", use_container_width=True, key="profile_btn"):
+            st.switch_page("pages/User_Profile.py")
+    
+    st.markdown(profile_html, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -621,6 +631,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
