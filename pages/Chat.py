@@ -234,35 +234,9 @@ with st.sidebar:
         conn.close()
         
         st.session_state.chat_messages = []
-        st.rerun()
+        st.rerun() 
     
-    st.markdown("---")
-    
-    # Context information
-    st.markdown("### 📊 Your Context")
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    # Get gaps count
-    cursor.execute("""
-        SELECT COUNT(*) as count
-        FROM gaps
-        WHERE user_id = ? AND resolved = 0
-    """, (user['id'],))
-    gaps_count = cursor.fetchone()['count']
-    
-    # Get tests count
-    cursor.execute("""
-        SELECT COUNT(*) as count
-        FROM tests
-        WHERE user_id = ? AND completed = 1
-    """, (user['id'],))
-    tests_count = cursor.fetchone()['count']
-    
-    conn.close()
-    
-    st.metric("Active Gaps", gaps_count)
-    st.metric("Tests Completed", tests_count)
+   
 # Sidebar
 with st.sidebar:
     st.markdown("---")
