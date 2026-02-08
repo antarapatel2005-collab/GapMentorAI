@@ -4,7 +4,7 @@ import streamlit as st
 from utils.studyPlan_generator import generate_study_plan, get_active_study_plan, complete_task, get_study_plan_history, update_task_status
 from utils.auth import require_authentication, get_current_user
 from utils.studyPlan_generator import generate_study_plan, get_active_study_plan, complete_task, get_study_plan_history, update_task_status
-from utils.database import get_connection
+from utils.database import get_connection, get_user_stats, get_user_tests, get_unread_notification_count
 from datetime import datetime, timedelta
 
 # Page config
@@ -35,6 +35,26 @@ st.markdown("""
     [data-testid="stSidebarNav"] li:nth-child(4) {
         display: none !important;
     }
+    /* Sidebar styling */
+    [data-testid="stSidebarNav"] {
+        padding-top: 1rem;
+    }
+    
+    [data-testid="stSidebarNav"] a {
+        background: rgba(102, 126, 234, 0.08);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+        color: #1a1a1a !important;
+        font-weight: 500;
+    }
+    
+    [data-testid="stSidebarNav"] a:hover {
+        background: rgba(102, 126, 234, 0.15);
+        border-left: 3px solid #667eea;
+    }
+    
     
     .plan-header {
         background: linear-gradient(135deg, #667eea, #764ba2);
@@ -201,6 +221,36 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Sidebar
+with st.sidebar:
+    
+    st.markdown(f"""
+        <div style="text-align: center; padding: 1rem;">
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
+                        width: 70px; height: 70px; border-radius: 50%; 
+                        margin: 0 auto 0.5rem; display: flex; align-items: center; 
+                        justify-content: center; font-size: 2rem; color: white; font-weight: bold;">
+                {user['username'][0].upper()}
+            </div>
+            <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
+            <p style="color: #888; font-size: 0.9rem;">Student</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Notification badge
+    unread_count = get_unread_notification_count(user['id'])
+    if unread_count > 0:
+        st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
+        st.markdown("---")
+    
+    
+    if st.button("🚪 Logout", use_container_width=True):
+        logout_user()
+        st.rerun()
+
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["📋 Current Plan", "📅 Calendar View", "📚 History"])
