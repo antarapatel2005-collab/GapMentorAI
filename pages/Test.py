@@ -33,7 +33,7 @@ st.markdown("""
 
     /* HIDE app and Login_Signup from sidebar */
     [data-testid="stSidebarNav"] li:first-child,
-    [data-testid="stSidebarNav"] li:nth-child(4) {
+    [data-testid="stSidebarNav"] li:nth-child(-1) {
         display: none !important;
     }
     /* Sidebar styling */
@@ -620,5 +620,6 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
