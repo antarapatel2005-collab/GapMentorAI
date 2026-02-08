@@ -1,13 +1,13 @@
 # pages/Test.py - Test generation and taking
 
 import streamlit as st
-from utils.auth import require_authentication, get_current_user
+from utils.auth import require_authentication, get_current_user, require_login
 from utils.database import create_test, save_question, save_user_answer, complete_test, get_user_stats, get_user_tests, get_unread_notification_count
 from utils.test_generator import generate_test_questions, evaluate_descriptive_answer, filter_duplicate_questions
 from utils.chat_analyser import analyze_test_for_gaps
 import json
 from datetime import datetime
-from utils.auth import require_login
+ 
 
 require_login()
 
@@ -624,6 +624,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
