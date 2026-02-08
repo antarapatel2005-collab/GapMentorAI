@@ -7,6 +7,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from utils.auth import require_login
+
+require_login()
 
 # Page config
 st.set_page_config(
@@ -570,5 +573,6 @@ with tab4:
         st.markdown("- **Getting Started**: Complete 5 tests")
         st.markdown("- **Dedicated Learner**: Complete 20 tests")
         st.markdown("- **Topic Master**: Score 90%+ on 3 tests in same topic")
+
 
 
