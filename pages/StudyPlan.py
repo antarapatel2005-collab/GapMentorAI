@@ -2,11 +2,11 @@
 
 import streamlit as st
 from utils.studyPlan_generator import generate_study_plan, get_active_study_plan, complete_task, get_study_plan_history, update_task_status
-from utils.auth import require_authentication, get_current_user
+from utils.auth import require_authentication, get_current_user, require_login
 from utils.studyPlan_generator import generate_study_plan, get_active_study_plan, complete_task, get_study_plan_history, update_task_status
 from utils.database import get_connection, get_user_stats, get_user_tests, get_unread_notification_count
 from datetime import datetime, timedelta
-from utils.auth import require_login
+
 
 require_login()
 
