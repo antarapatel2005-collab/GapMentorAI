@@ -79,3 +79,10 @@ def get_current_user():
         'full_name': st.session_state.full_name
     }
 
+def require_login():
+    """Check if user is logged in"""
+    if not st.session_state.get('logged_in', False):
+        st.warning("⚠️ Please login first")
+        st.stop()
+
+
