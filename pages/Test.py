@@ -236,17 +236,25 @@ st.markdown("""
 with st.sidebar:
     st.markdown("---")
     
-    # Clickable user profile section
-    if st.button(
-        "👤 My Profile",
-        key="user_profile_btn",
-        use_container_width=True,
-        help="View and edit your profile"
-    ):
-        st.switch_page("pages/User_Profile.py")
+    # Custom CSS for hover effect
+    st.markdown("""
+        <style>
+        .profile-card {
+            text-align: center;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+        .profile-card:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
+    # Profile card with button below
     st.markdown(f"""
-        <div style="text-align: center; padding: 1rem;">
+        <div class="profile-card">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
                         width: 70px; height: 70px; border-radius: 50%; 
                         margin: 0 auto 0.5rem; display: flex; align-items: center; 
@@ -254,15 +262,20 @@ with st.sidebar:
                 {user['username'][0].upper()}
             </div>
             <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
-            <p style="color: #888; font-size: 0.9rem;">Student</p>
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">Student</p>
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    # Profile button
+    if st.button("⚙️ Manage Profile", use_container_width=True, key="manage_profile"):
+        st.switch_page("pages/User_Profile.py")
     
     st.markdown("---")
     
-    # Notification badge
+    # Logout button
+    if st.button("🚪 Logout", use_container_width=True):
+        logout_user()
+        st.switch_page("pages/Login_Signup.py")    # Notification badge
     unread_count = get_unread_notification_count(user['id'])
     if unread_count > 0:
         st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
@@ -631,6 +644,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
