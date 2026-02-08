@@ -33,7 +33,8 @@ st.markdown("""
 
     /* HIDE app and Login_Signup from sidebar */
     [data-testid="stSidebarNav"] li:first-child,
-    [data-testid="stSidebarNav"] li:last-child {
+    [data-testid="stSidebarNav"] li:nth-child(4),
+    [data-testid="stSidebarNav"] li:last-child{
         display: none !important;
     }
     /* Sidebar styling */
