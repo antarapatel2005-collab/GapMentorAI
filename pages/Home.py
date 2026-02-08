@@ -150,7 +150,7 @@ st.markdown("""
 
 # Sidebar
 with st.sidebar:
-    st.markdown("---")
+    
     st.markdown(f"""
         <div style="text-align: center; padding: 1rem;">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
@@ -297,5 +297,6 @@ with col_right:
 
 st.markdown("---")
 st.caption("🎓 GapMentorAI - Your Personal AI Learning Companion")
+
 
 
