@@ -236,7 +236,7 @@ st.markdown("""
 # Sidebar
 # Sidebar
 with st.sidebar:
-    st.markdown("---")
+    
     st.markdown(f"""
         <div style="text-align: center; padding: 1rem;">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
@@ -256,8 +256,8 @@ with st.sidebar:
     unread_count = get_unread_notification_count(user['id'])
     if unread_count > 0:
         st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
+        st.markdown("---")
     
-    st.markdown("---")
     
     if st.button("🚪 Logout", use_container_width=True):
         logout_user()
@@ -621,6 +621,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
