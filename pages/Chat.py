@@ -259,7 +259,7 @@ with st.sidebar:
     unread_count = get_unread_notification_count(user['id'])
     if unread_count > 0:
         st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
-         st.markdown("---")
+        st.markdown("---")
     
    
     
