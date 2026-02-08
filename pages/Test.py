@@ -256,7 +256,7 @@ with st.sidebar:
     
     
     # Profile button
-    if st.button("st.markdown(f"""
+    if st.button("""st.markdown(f"""
         <div class="profile-card">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
                         width: 70px; height: 70px; border-radius: 50%; 
@@ -267,7 +267,7 @@ with st.sidebar:
             <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
             <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">Student</p>
         </div>
-    """, unsafe_allow_html=True)", use_container_width=True, key="manage_profile"):
+    """, unsafe_allow_html=True)""", use_container_width=True, key="manage_profile"):
         st.switch_page("pages/User_Profile.py")
     
     st.markdown("---")
@@ -642,6 +642,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
