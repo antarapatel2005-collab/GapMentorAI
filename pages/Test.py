@@ -233,6 +233,72 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Sidebar
+with st.sidebar:
+    st.markdown("---")
+   # Create a unique key for the button
+if 'profile_click_count' not in st.session_state:
+    st.session_state.profile_click_count = 0
+
+# Custom CSS for clickable profile card
+st.markdown("""
+    <style>
+    .clickable-profile {
+        text-align: center;
+        padding: 1rem;
+        cursor: pointer;
+        border-radius: 15px;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+        background: rgba(102, 126, 234, 0.05);
+    }
+    .clickable-profile:hover {
+        background: rgba(102, 126, 234, 0.15);
+        border: 2px solid #667eea;
+        transform: translateY(-2px);
+    }
+    .clickable-profile:active {
+        transform: translateY(0);
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Render the profile card
+st.markdown(f"""
+    <div class="clickable-profile" id="profile-card">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); 
+                    width: 70px; height: 70px; border-radius: 50%; 
+                    margin: 0 auto 0.5rem; display: flex; align-items: center; 
+                    justify-content: center; font-size: 2rem; color: white; font-weight: bold;">
+            {user['username'][0].upper()}
+        </div>
+        <h3 style="margin: 0;">{user['full_name'] or user['username']}</h3>
+        <p style="color: #888; font-size: 0.9rem; margin: 0;">Student</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Invisible button overlay (covers the entire card area)
+if st.button("", key=f"profile_btn_{st.session_state.profile_click_count}", help="Click to view profile", use_container_width=True):
+    st.session_state.profile_click_count += 1
+    st.switch_page("pages/User_Profile.py")
+
+st.markdown("---")
+    
+    st.markdown("---")
+    
+    # Notification badge
+    unread_count = get_unread_notification_count(user['id'])
+    if unread_count > 0:
+        st.info(f"🔔 {unread_count} unread notification{'s' if unread_count > 1 else ''}")
+    
+    st.markdown("---")
+    
+    if st.button("🚪 Logout", use_container_width=True):
+        logout_user()
+        st.rerun()
+
+
 # Initialize test state
 if 'test_stage' not in st.session_state:
     st.session_state.test_stage = 'config'  # config, testing, results
@@ -590,6 +656,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
