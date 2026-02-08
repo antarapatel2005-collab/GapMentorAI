@@ -48,6 +48,25 @@ st.markdown("""
     [data-testid="stSidebarNav"] li:nth-child(4) {
         display: none !important;
     }
+     /* Sidebar styling */
+    [data-testid="stSidebarNav"] {
+        padding-top: 1rem;
+    }
+    
+    [data-testid="stSidebarNav"] a {
+        background: rgba(102, 126, 234, 0.08);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+        color: #1a1a1a !important;
+        font-weight: 500;
+    }
+    
+    [data-testid="stSidebarNav"] a:hover {
+        background: rgba(102, 126, 234, 0.15);
+        border-left: 3px solid #667eea;
+    }
     
     .stChatMessage {
         padding: 1rem;
