@@ -282,9 +282,7 @@ with st.sidebar:
         st.markdown("---")
     
     
-    if st.button("🚪 Logout", use_container_width=True):
-        logout_user()
-        st.rerun()
+    
 
 
 # Initialize test state
@@ -644,6 +642,7 @@ elif st.session_state.test_stage == 'results':
     with col3:
         if st.button("💬 Get Help with Gaps", use_container_width=True):
             st.switch_page("pages/Chat.py")
+
 
 
 
