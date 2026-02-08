@@ -4,10 +4,7 @@ import streamlit as st
 from utils.auth import require_authentication, get_current_user, logout_user
 from utils.database import get_user_stats, get_user_tests, get_unread_notification_count
 from datetime import datetime
-from utils.auth import init_session_state
 
-# Initialize session state FIRST
-init_session_state()
 
 # Page config
 st.set_page_config(
@@ -301,6 +298,7 @@ with col_right:
 
 st.markdown("---")
 st.caption("🎓 GapMentorAI - Your Personal AI Learning Companion")
+
 
 
 
