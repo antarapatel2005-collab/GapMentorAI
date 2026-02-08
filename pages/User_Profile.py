@@ -4,9 +4,9 @@ import streamlit as st
 
 from utils.database import get_connection, get_user_by_id, get_user_stats, get_user_tests, get_unread_notification_count
 import re
-from utils.auth import require_authentication, get_current_user, logout_user
+from utils.auth import require_authentication, get_current_user, logout_user, require_login
 import hashlib
-from utils.auth import require_login
+ 
 
 require_login()
 
