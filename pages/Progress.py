@@ -1,13 +1,13 @@
 # pages/Progress.py - Progress tracking and analytics
 
 import streamlit as st
-from utils.auth import require_authentication, get_current_user
+from utils.auth import require_authentication, get_current_user, require_login
 from utils.database import get_connection, get_user_stats, get_user_tests, get_unread_notification_count
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from utils.auth import require_login
+
 
 require_login()
 
@@ -573,6 +573,7 @@ with tab4:
         st.markdown("- **Getting Started**: Complete 5 tests")
         st.markdown("- **Dedicated Learner**: Complete 20 tests")
         st.markdown("- **Topic Master**: Score 90%+ on 3 tests in same topic")
+
 
 
 
