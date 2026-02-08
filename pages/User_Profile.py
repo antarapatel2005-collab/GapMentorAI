@@ -6,6 +6,9 @@ from utils.database import get_connection, get_user_by_id, get_user_stats, get_u
 import re
 from utils.auth import require_authentication, get_current_user, logout_user
 import hashlib
+from utils.auth import require_login
+
+require_login()
 
 def hash_password(password: str) -> str:
     """Hash a password using SHA-256"""
