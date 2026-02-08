@@ -5,7 +5,9 @@ from utils.auth import require_authentication, get_current_user
 from utils.database import get_connection, get_user_stats, get_user_tests, get_unread_notification_count
 from datetime import datetime
 import google.generativeai as genai
+from utils.auth import require_login
 
+require_login()
 
 # Page config
 st.set_page_config(
