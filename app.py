@@ -63,4 +63,25 @@ else:
     # User not logged in, redirect to login/signup
     st.switch_page("pages/Login_Signup.py")
 
+def main():
+    if not st.session_state['logged_in']:
+        # Show login
+        import pages.Login_Signup as login_page
+        login_page.show_login_signup()
+    else:
+        # Check if user has completed profile
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM user_profiles WHERE user_id = ?', 
+                      (st.session_state['user_id'],))
+        profile = cursor.fetchone()
+        conn.close()
+        
+        if not profile:
+            # Force profile setup for new users
+            st.switch_page("pages/Profile_Setup.py")
+        else:
+            # Normal navigation
+            st.switch_page("pages/Home.py")
+
 
