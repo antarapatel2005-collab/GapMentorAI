@@ -418,3 +418,28 @@ def get_unread_notification_count(user_id: int) -> int:
     conn.close()
     
     return count
+
+# Add to utils/database.py
+def create_user_profile_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
+            study_field TEXT,
+            interest_areas TEXT,  -- Store as comma-separated
+            knowledge_level TEXT,
+            institution TEXT,
+            grade_year TEXT,
+            learning_goals TEXT,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
