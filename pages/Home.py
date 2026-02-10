@@ -13,7 +13,7 @@ require_login()
 st.set_page_config(
     page_title="Home - GapMentorAI",
     page_icon="🏠",
-    layout="centered"
+    layout="wide"
 )
 
 # Require authentication
@@ -301,6 +301,7 @@ with col_right:
 
 st.markdown("---")
 st.caption("🎓 GapMentorAI - Your Personal AI Learning Companion")
+
 
 
 
